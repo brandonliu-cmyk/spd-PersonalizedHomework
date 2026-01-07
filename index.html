@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能布置作业 - Sigma Education</title>
+    <style>
+        :root {
+            --primary-color: #1890ff;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --text-secondary: #666;
+            --border-color: #d9d9d9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 80px;
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: #fff;
+            padding: 0 20px;
+            height: 50px; /* 稍微调矮一点 */
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-link {
+            margin: 10px auto 10px auto;
+            max-width: 1200px;
+            padding: 0 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Banner */
+        .banner {
+            background: linear-gradient(90deg, #ffca88 0%, #ff85c0 100%);
+            border-radius: 8px;
+            padding: 20px 25px; /* 减小高度 */
+            color: white;
+            margin-bottom: 15px;
+        }
+        .banner h2 { margin-bottom: 5px; font-size: 20px; }
+        .banner p { opacity: 0.9; font-size: 13px; margin: 0; }
+
+        /* 卡片通用样式 */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px; /* 默认padding */
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* 顶部紧凑卡片特别样式 */
+        .compact-card {
+            padding: 15px 20px; /* 更紧凑的内边距 */
+            height: 100%; /* 撑满高度以保持对齐 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 步骤标题 */
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px; /* 减小间距 */
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 10px; /* 减小间距 */
+        }
+
+        .step-num {
+            background: #faad14;
+            color: white;
+            width: 24px; /* 稍微缩小 */
+            height: 24px;
+            font-size: 14px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .step-title {
+            font-size: 16px; /* 稍微缩小字体 */
+            font-weight: bold;
+        }
+
+        .tab-title {
+            cursor: pointer;
+            color: #999;
+            padding-bottom: 2px;
+            transition: all 0.3s;
+        }
+        
+        .tab-title.active-tab {
+            color: #333;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .tab-title:hover {
+            color: var(--primary-color);
+        }
+
+        /* 知识点标签样式 */
+        .knowledge-points-bar {
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .kp-label {
+            font-weight: bold;
+            color: var(--text-secondary);
+        }
+        .kp-tag {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 顶部单行选择布局 */
+        .single-line-selects {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .select-box {
+            border: 1px solid var(--border-color);
+            padding: 6px 10px; /* 更紧凑 */
+            border-radius: 4px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 13px; /* 字体改小适应单行 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        /* 设置区域 */
+        .settings-item {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .settings-item label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 15px;
+            color: var(--text-secondary);
+        }
+
+        .number-input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        /* 难度分布条 */
+        .difficulty-row {
+            display: flex;
+            align-items: center;
+            margin-left: 115px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .diff-input {
+            width: 50px;
+            margin: 0 5px;
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        /* 开关样式 */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e8e8e8;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+            margin-right: 10px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* 个性化作业表格样式 */
+        .personal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .personal-table th, .personal-table td {
+            border: 1px solid #e8e8e8;
+            padding: 10px; /* 表格也稍微紧凑点 */
+            text-align: left;
+        }
+
+        .personal-table th {
+            background-color: #fafafa;
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .layer-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+        .layer-5 { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .layer-4 { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .layer-3 { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+        .layer-2 { background: #fff0f6; color: #eb2f96; border: 1px solid #ffadd2; }
+        .layer-1 { background: #fff1f0; color: #f5222d; border: 1px solid #ffa39e; }
+
+        /* 拖拽区域 */
+        .student-zone {
+            min-height: 40px;
+            background: #fafafa;
+            border: 1px dashed #d9d9d9;
+            border-radius: 4px;
+            padding: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .student-tag {
+            background: white;
+            border: 1px solid #d9d9d9;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: move;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .student-tag:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .student-tag.dragging {
+            opacity: 0.5;
+            background: #e6f7ff;
+        }
+
+        .delete-x {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 14px;
+            height: 14px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            margin-left: 5px;
+            font-size: 10px;
+            cursor: pointer;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+        .delete-x:hover {
+            background: #cf1322;
+        }
+
+        /* 底部按钮 */
+        .footer-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            padding: 15px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 35px;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .config-inputs-mini {
+            display: flex;
+            gap: 4px;
+            margin-top: 5px;
+            font-size: 10px;
+            color: #888;
+        }
+        .config-inputs-mini div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .mini-input {
+            width: 35px;
+            border: 1px solid #d9d9d9;
+            border-radius: 2px;
+            text-align: center;
+            font-size: 11px;
+            padding: 2px 0;
+        }
+
+        /* 个性化模式下的顶部设置栏 */
+        .personalized-header-settings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: #fcfcfc;
+            border: 1px solid #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .ph-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        .ph-item label {
+            margin-right: 8px;
+            color: #666;
+        }
+
+        .hidden { display: none; }
+        
+        /* 顶部两列布局 */
+        .top-section { 
+            display: grid; 
+            grid-template-columns: 3fr 2fr; /* 左边稍微宽一点给4个下拉框，右边窄一点 */
+            gap: 15px; 
+            margin-bottom: 15px; /* 减少间距 */
+        }
+
+        /* AI 按钮样式 */
+        .btn-ai {
+            background: linear-gradient(135deg, #722ed1, #b37feb);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(114, 46, 209, 0.2);
+        }
+        .btn-ai:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(114, 46, 209, 0.3);
+        }
+        .btn-ai:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 100 100" fill="#1890ff">
+                <circle cx="50" cy="50" r="45" stroke="#1890ff" stroke-width="5" fill="none"/>
+                <path d="M30 50 L50 70 L80 30" stroke="#1890ff" stroke-width="8" fill="none"/>
+            </svg>
+            兆涵科技 <span style="font-size: 14px; font-weight: normal; color: #666; margin-left: 5px;">Sigma Education</span>
+        </div>
+        <div style="margin-left: auto;">
+             <button class="btn-primary" style="padding: 5px 15px; font-size: 13px;">新手教程</button>
+        </div>
+    </div>
+
+    <div class="back-link">← 返回</div>
+
+    <div class="container">
+        <div class="banner">
+            <h2>智能布置作业</h2>
+            <p>AI自动生成作业内容，教师可选可调，提升备课效率，学生练习更贴合。</p>
+        </div>
+
+        <div class="top-section">
+            <div class="card compact-card">
+                <div class="step-header">
+                    <div class="step-num">1</div>
+                    <div class="step-title" style="display: flex; gap: 20px;">
+                         <span class="tab-title active-tab" onclick="switchStep1Tab(this, 'textbook')">教材章节选择</span>
+                         <span class="tab-title" onclick="switchStep1Tab(this, 'knowledge')">知识点选择</span>
+                    </div>
+                </div>
+                
+                <!-- 教材章节选择内容 -->
+                <div id="content-textbook" class="single-line-selects">
+                    <div class="select-box" style="flex: 0 0 80px;">语文 ▾</div>
+                    <div class="select-box" style="flex: 0 0 100px;">统编版... ▾</div>
+                    <div class="select-box" style="flex: 0 0 110px;">一年级... ▾</div>
+                    <div class="select-box" style="flex: 1;">第二单元：5. 守株待兔 ▾</div>
+                </div>
+
+                <!-- 知识点选择内容 -->
+                <div id="content-knowledge" class="single-line-selects hidden">
+                    <div class="select-box" style="flex: 0 0 120px;">
+                         学段：
+                         <select style="border:none; background:transparent; color:#666; width: 60px;">
+                             <option>小学</option>
+                             <option>初中</option>
+                             <option>高中</option>
+                         </select>
+                    </div>
+                    <div class="select-box" style="flex: 1; color: #999;">
+                        🔍 选择知识点
+                    </div>
+                </div>
+            </div>
+
+            <div class="card compact-card">
+                <div class="step-header" style="margin-bottom: 5px; border-bottom: none;">
+                    <div class="step-num">2</div>
+                    <div class="step-title" style="flex-grow: 1; display: flex; gap: 15px; font-size: 14px; align-items: center;">
+                        <span style="color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 2px; font-size: 15px; font-weight: bold;">初一2班</span>
+                        <span>五年级8班</span>
+                        <span>六年级...</span>
+                    </div>
+                    <button style="border: 1px solid var(--primary-color); background: #fff; color: var(--primary-color); padding: 2px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap;">+ 添加</button>
+                </div>
+                <div style="color: #999; font-size: 12px; margin-left: 35px; margin-top: 5px;">已选: 张伟, 李娜, 王强 等 45 人</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">作业设置</div>
+            </div>
+            
+            <div class="knowledge-points-bar">
+                <span class="kp-label">主要知识点：</span>
+                <span class="kp-tag">寓言故事理解</span>
+                <span class="kp-tag">文言文实词</span>
+                <span class="kp-tag">因果逻辑</span>
+                <span class="kp-tag">背诵全文</span>
+            </div>
+
+            <div class="switch-container">
+                <span style="font-weight: bold; margin-right: 15px;">个性化布置作业</span>
+                <label class="switch">
+                    <input type="checkbox" id="personalizationToggle" onchange="toggleMode()">
+                    <span class="slider"></span>
+                </label>
+                <span style="font-size: 12px; color: #888;">开启后可根据学生掌握程度分层布置不同难度的题目</span>
+                
+                <button class="btn-ai" style="margin-left: auto; display: none;" id="aiAssignBtn" onclick="autoAssignStudents()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L15 9H22L16 14L19 21L12 17L5 21L8 14L2 9H9L12 2Z" />
+                    </svg>
+                    AI自动分配学生
+                </button>
+            </div>
+
+            <div id="standard-view" class="settings-form">
+                <div class="settings-item">
+                    <label class="required">作业类型：</label>
+                    <label style="width:auto; text-align:left;"><input type="radio" name="type" checked> 课后巩固</label>
+                </div>
+
+                <div class="settings-item">
+                    <label class="required">题目数量：</label>
+                    <input type="number" class="number-input" value="20"> &nbsp;个
+                </div>
+
+                <div class="settings-item" style="align-items: flex-start;">
+                    <label class="required" style="margin-top: 8px;">题目难度分布：</label>
+                    <div>
+                        <div class="select-box" style="width: 120px; margin-bottom: 10px;">轻松应对 ▾</div>
+                        <div class="difficulty-group">
+                            <div class="difficulty-row">基础 <input type="text" class="diff-input" value="30">%</div>
+                            <div class="difficulty-row">容易 <input type="text" class="diff-input" value="50">%</div>
+                            <div class="difficulty-row">中等 <input type="text" class="diff-input" value="20">%</div>
+                            <div class="difficulty-row">困难 <input type="text" class="diff-input" value="0">%</div>
+                            <div class="difficulty-row">挑战 <input type="text" class="diff-input" value="0">%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label class="required">题目总分：</label>
+                    <input type="text" class="number-input" value="100"> &nbsp;分
+                </div>
+
+                <div class="settings-item">
+                    <label class="required">截止提交时间：</label>
+                    <div class="select-box" style="margin-right: 10px;">2024-05-20</div>
+                    <div class="select-box">18:00</div>
+                </div>
+            </div>
+
+            <div id="personalized-view" class="hidden">
+                
+                <div class="personalized-header-settings">
+                    <div class="ph-item">
+                        <label>题目数量：</label>
+                        <input type="number" class="number-input" value="20"> &nbsp;个
+                    </div>
+                    <div class="ph-item">
+                        <label>题目总分：</label>
+                        <input type="number" class="number-input" value="100"> &nbsp;分
+                    </div>
+                    <div class="ph-item">
+                        <label>截止提交时间：</label>
+                        <div class="select-box" style="padding: 5px 10px; width: 120px; margin-right: 5px;">2024-05-20</div>
+                        <div class="select-box" style="padding: 5px 10px; width: 80px;">18:00</div>
+                    </div>
+                </div>
+
+                <table class="personal-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%">知识点掌握程度</th>
+                            <th style="width: 35%">题目难度配置</th>
+                            <th style="width: 50%">学生名单 (可拖拽调整)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="layers-body">
+                        
+                        <tr>
+                            <td>
+                                <span class="layer-badge layer-5">90%-100%</span>
+                            </td>
+                            <td>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 12px;">难度预设:</span>
+                                    <select style="padding: 4px; border-radius: 4px; border: 1px solid #d9d9d9;">
+                                        <option value="challenge">挑战自我</option>
+                                        <option value="hard">颇有难度</option>
+                                    </select>
+                                </div>
+                                <div class="config-inputs-mini">
+                                    <div><span>基础</span><input type="text" class="mini-input" value="0">%</div>
+                                    <div><span>容易</span><input type="text" class="mini-input" value="10">%</div>
+                                    <div><span>中等</span><input type="text" class="mini-input" value="20">%</div>
+                                    <div><span>困难</span><input type="text" class="mini-input" value="40">%</div>
+                                    <div><span>挑战</span><input type="text" class="mini-input" value="30">%</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="student-zone" id="zone-layer-5" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <!-- Empty initially -->
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="layer-badge layer-4">75%-89%</span>
+                            </td>
+                            <td>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 12px;">难度预设:</span>
+                                    <select style="padding: 4px; border-radius: 4px; border: 1px solid #d9d9d9;">
+                                        <option value="hard" selected>颇有难度</option>
+                                        <option value="medium">小有难度</option>
+                                    </select>
+                                </div>
+                                <div class="config-inputs-mini">
+                                    <div><span>基础</span><input type="text" class="mini-input" value="10">%</div>
+                                    <div><span>容易</span><input type="text" class="mini-input" value="20">%</div>
+                                    <div><span>中等</span><input type="text" class="mini-input" value="40">%</div>
+                                    <div><span>困难</span><input type="text" class="mini-input" value="20">%</div>
+                                    <div><span>挑战</span><input type="text" class="mini-input" value="10">%</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="student-zone" id="zone-layer-4" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <!-- Empty initially -->
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <span class="layer-badge layer-3">60%-74%</span>
+                            </td>
+                            <td>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 12px;">难度预设:</span>
+                                    <select style="padding: 4px; border-radius: 4px; border: 1px solid #d9d9d9;">
+                                        <option value="medium" selected>小有难度</option>
+                                        <option value="easy">专注一下</option>
+                                    </select>
+                                </div>
+                                <div class="config-inputs-mini">
+                                    <div><span>基础</span><input type="text" class="mini-input" value="20">%</div>
+                                    <div><span>容易</span><input type="text" class="mini-input" value="30">%</div>
+                                    <div><span>中等</span><input type="text" class="mini-input" value="30">%</div>
+                                    <div><span>困难</span><input type="text" class="mini-input" value="15">%</div>
+                                    <div><span>挑战</span><input type="text" class="mini-input" value="5">%</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="student-zone" id="zone-layer-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <!-- Empty initially -->
+                                </div>
+                            </td>
+                        </tr>
+
+                         <tr>
+                            <td>
+                                <span class="layer-badge layer-2">40%-59%</span>
+                            </td>
+                            <td>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 12px;">难度预设:</span>
+                                    <select style="padding: 4px; border-radius: 4px; border: 1px solid #d9d9d9;">
+                                        <option value="easy" selected>专注一下</option>
+                                        <option value="relax">轻松应对</option>
+                                    </select>
+                                </div>
+                                <div class="config-inputs-mini">
+                                    <div><span>基础</span><input type="text" class="mini-input" value="40">%</div>
+                                    <div><span>容易</span><input type="text" class="mini-input" value="40">%</div>
+                                    <div><span>中等</span><input type="text" class="mini-input" value="15">%</div>
+                                    <div><span>困难</span><input type="text" class="mini-input" value="5">%</div>
+                                    <div><span>挑战</span><input type="text" class="mini-input" value="0">%</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="student-zone" id="zone-layer-2" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <!-- Empty initially -->
+                                </div>
+                            </td>
+                        </tr>
+
+                         <tr>
+                            <td>
+                                <span class="layer-badge layer-1">0%-39%</span>
+                            </td>
+                            <td>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 12px;">难度预设:</span>
+                                    <select style="padding: 4px; border-radius: 4px; border: 1px solid #d9d9d9;">
+                                        <option value="relax" selected>轻松应对</option>
+                                    </select>
+                                </div>
+                                <div class="config-inputs-mini">
+                                    <div><span>基础</span><input type="text" class="mini-input" value="60">%</div>
+                                    <div><span>容易</span><input type="text" class="mini-input" value="30">%</div>
+                                    <div><span>中等</span><input type="text" class="mini-input" value="10">%</div>
+                                    <div><span>困难</span><input type="text" class="mini-input" value="0">%</div>
+                                    <div><span>挑战</span><input type="text" class="mini-input" value="0">%</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="student-zone" id="zone-layer-1" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <!-- Empty initially -->
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; text-align: right; color: #666; font-size: 12px;">
+                    * 拖拽学生姓名可调整所属层级
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="footer-bar">
+        <button class="btn-primary" onclick="window.location.href='preview.html'">生成作业</button>
+    </div>
+
+    <script>
+        function switchStep1Tab(element, type) {
+            // Update Tab Styles
+            const tabs = document.querySelectorAll('.tab-title');
+            tabs.forEach(t => t.classList.remove('active-tab'));
+            element.classList.add('active-tab');
+
+            // Toggle Content
+            const textbookContent = document.getElementById('content-textbook');
+            const knowledgeContent = document.getElementById('content-knowledge');
+
+            if (type === 'textbook') {
+                textbookContent.classList.remove('hidden');
+                knowledgeContent.classList.add('hidden');
+            } else {
+                textbookContent.classList.add('hidden');
+                knowledgeContent.classList.remove('hidden');
+            }
+        }
+
+        function toggleMode() {
+            const checkBox = document.getElementById("personalizationToggle");
+            const standardView = document.getElementById("standard-view");
+            const personalizedView = document.getElementById("personalized-view");
+            const aiBtn = document.getElementById("aiAssignBtn");
+
+            if (checkBox.checked) {
+                standardView.classList.add("hidden");
+                personalizedView.classList.remove("hidden");
+                aiBtn.style.display = "inline-flex"; // 显示 AI 按钮，使用 inline-flex 保持 flex 布局
+            } else {
+                standardView.classList.remove("hidden");
+                personalizedView.classList.add("hidden");
+                aiBtn.style.display = "none"; // 隐藏 AI 按钮
+            }
+        }
+
+        // Student Data for Simulation
+        const studentData = {
+            'zone-layer-5': ['张伟', '王芳', '李娜'],
+            'zone-layer-4': ['赵强', '刘洋'],
+            'zone-layer-3': ['陈静', '杨柳', '黄勇'],
+            'zone-layer-2': ['吴磊', '周杰'],
+            'zone-layer-1': ['郑辉', '孙丽']
+        };
+
+        function autoAssignStudents() {
+            const btn = document.getElementById('aiAssignBtn');
+            const originalContent = btn.innerHTML;
+            
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin" style="animation: spin 1s linear infinite; margin-right: 5px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93"/>
+            </svg> AI正在分析...`;
+            
+            // Add keyframes for spin if not exists (simple way)
+            if (!document.getElementById('spin-style')) {
+                const style = document.createElement('style');
+                style.id = 'spin-style';
+                style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
+                document.head.appendChild(style);
+            }
+
+            setTimeout(() => {
+                // Populate students
+                for (const [zoneId, names] of Object.entries(studentData)) {
+                    const zone = document.getElementById(zoneId);
+                    zone.innerHTML = ''; // Clear first to avoid duplicates
+                    
+                    names.forEach((name, index) => {
+                        const span = document.createElement('span');
+                        span.className = 'student-tag';
+                        span.draggable = true;
+                        span.id = `s-${zoneId}-${index}`; // Unique ID
+                        // span.textContent = name; // Replaced with innerHTML to include delete btn
+                        span.innerHTML = `${name} <span class="delete-x" onclick="deleteStudent(event)">×</span>`;
+                        span.ondragstart = drag; // Bind existing drag function
+                        
+                        // Add fade-in animation
+                        span.style.animation = `fadeIn 0.5s ease forwards`;
+                        span.style.opacity = '0';
+                        
+                        zone.appendChild(span);
+                        
+                        // Stagger the fade-in slightly for effect
+                        setTimeout(() => {
+                            span.style.opacity = '1';
+                        }, index * 100);
+                    });
+                }
+
+                // Restore Button
+                btn.innerHTML = `<span style="color: #fff;">✅ 分配完成</span>`;
+                btn.style.background = "#52c41a"; // Green for success
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    btn.style.background = ""; // Restore original background gradient
+                }, 2000);
+
+            }, 1500); // 1.5 seconds loading time
+        }
+        
+        function deleteStudent(e) {
+            e.stopPropagation(); // Access the click event
+            if (confirm("删除后需要重新添加并重新分配，确定删除吗？")) {
+                const tag = e.target.closest('.student-tag');
+                if (tag) {
+                    tag.remove();
+                }
+            }
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { 
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.target.classList.add('dragging');
+        }
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            var draggedElement = document.getElementById(data);
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                if (ev.target.classList.contains('student-zone')) {
+                    ev.target.appendChild(draggedElement);
+                } else if (ev.target.classList.contains('student-tag')) {
+                    ev.target.parentNode.appendChild(draggedElement);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
